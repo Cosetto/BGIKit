@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace SysgrpConverter
 {
@@ -43,6 +44,11 @@ namespace SysgrpConverter
                 //bits = br.ReadBytes((int)br.BaseStream.Length - 0x36);
                 bits = br.ReadBytes(width * Math.Abs(height) * (depth / 8));
                 br.Close();
+            }
+
+            if (height >= 0)
+            {
+                bits = Program.FlipY(bits, depth, width);
             }
 
             using (var bw = new BinaryWriter(new FileStream(strBmpFile + ".out", FileMode.Create)))
@@ -121,6 +127,20 @@ namespace SysgrpConverter
             ms.Write(bits, 0, bits.Length);
 
             return ms.ToArray();
+        }
+
+        public static byte[] FlipY(byte[] data, int bpp, int width)
+        {
+            Console.WriteLine("Flipping...");
+            int height = bpp / 8 * width;
+            List<byte> list = new List<byte>();
+            for (int i = data.Length - height; i >= 0; i -= height)
+            {
+                byte[] array = new byte[height];
+                Array.Copy(data, i, array, 0, height);
+                list.AddRange(array);
+            }
+            return list.ToArray();
         }
     }
 }
